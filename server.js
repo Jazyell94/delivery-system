@@ -153,7 +153,10 @@ app.get('/clientes', (req, res) => {
     `;
 
     db.query(query, [selectedDate, selectedDate], (error, results) => {
-        if (error) return res.status(500).json({ error: 'Erro ao buscar dados' });
+        if (error) {
+            console.error('Erro SQL:', error); // Mostra no terminal do Railway
+            return res.status(500).json({ error: error.message }); // Mostra na API o erro real
+        }
 
         const formattedResults = results.map(client => {
             const date = new Date(client.data_pedido);
@@ -163,6 +166,7 @@ app.get('/clientes', (req, res) => {
 
         res.json(formattedResults);
     });
+
 });
 
 
