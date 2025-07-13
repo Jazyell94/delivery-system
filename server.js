@@ -18,9 +18,26 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 
-// Servir arquivos estáticos
-const path = require('path');
+// Middleware para servir arquivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Rotas diretas (opcional, mas útil se quiser acessar via /admin ou /cliente)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin', 'login.html'));
+});
+
+app.get('/admin/painel', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin', 'admin.html'));
+});
+
+app.get('/cliente', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'cliente', 'index.html'));
+});
+
 
 // Conexão com o banco de dados
 const db = mysql.createConnection({
