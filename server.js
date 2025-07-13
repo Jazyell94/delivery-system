@@ -1,7 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
+
+require('dotenv').config();
 const mysql = require('mysql2');
+
 const WebSocket = require('ws');
 const bodyParser = require('body-parser');
 
