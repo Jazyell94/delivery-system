@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
+const path = require('path');
 
 require('dotenv').config();
 const mysql = require('mysql2');
@@ -9,7 +10,7 @@ const WebSocket = require('ws');
 const bodyParser = require('body-parser');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
