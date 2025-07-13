@@ -308,6 +308,22 @@ async function deleteOrder(clientId) {
     }
 }
 
+// ==================== IMPRESSÃO =======================
+
+qz.security.setCertificatePromise(() => {
+    return fetch("/path/to/your/certificate.pem") // hospede esse arquivo no seu projeto
+        .then(res => res.text());
+});
+
+qz.security.setSignaturePromise(toSign => {
+    return fetch("/path/to/sign-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: toSign })
+    }).then(res => res.text());
+});
+
+
 // Função para imprimir o pedido
 function printWithQZ(order) {
     const conteudo = `
@@ -334,3 +350,5 @@ Obrigado!
 
     qz.print(config, data).catch(console.error);
 }
+
+
