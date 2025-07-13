@@ -18,8 +18,11 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 
-// Conexão com o banco de dados
+// Servir arquivos estáticos
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
 
+// Conexão com o banco de dados
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
