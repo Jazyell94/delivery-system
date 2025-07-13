@@ -9,7 +9,9 @@ const WebSocket = require('ws');
 const bodyParser = require('body-parser');
 
 const app = express();
-const port = 3000; // Porta única para ambos
+
+const port = process.env.PORT || 3000;
+
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
