@@ -10,6 +10,14 @@ const app = express();
 
 app.use(cors());
 
+// Configurar CORS manualmente
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*'); // ou substitua '*' por seu domínio específico
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  next();
+});
+
 const port = process.env.PORT || 3000;
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
