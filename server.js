@@ -1,4 +1,5 @@
-const cors = require('cors');
+const app = express();
+
 const corsOptions = {
   origin: ['https://jazyell94.github.io'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -8,13 +9,14 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
+const cors = require('cors');
 const express = require('express');
 const http = require('http');
 const path = require('path');
 const mysql = require('mysql2');
 const WebSocket = require('ws');
 const bodyParser = require('body-parser');
-const app = express();
+
 const port = process.env.PORT || 3000;
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
