@@ -5,6 +5,7 @@ const path = require('path');
 const mysql = require('mysql2');
 const WebSocket = require('ws');
 const bodyParser = require('body-parser');
+const config = require('./config'); 
 
 const app = express();
 
@@ -26,14 +27,17 @@ const wss = new WebSocket.Server({ server });
 app.use(express.json());
 app.use(bodyParser.json());
 
-// Conexão com o banco de dados
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME
+
+// Conexão com banco
+const db = mysql.createConnection(config.db);
+db.connect(err => {
+  if (err) {
+    console.error('❌ Erro ao conectar no banco:', err);
+    return;
+  }
+  console.log('✅ Conectado ao banco!');
 });
+
 
 db.connect((err) => {
     if (err) {
