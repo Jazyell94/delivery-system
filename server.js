@@ -9,7 +9,7 @@ const bodyParser = require('body-parser');
 const app = express();
 
 const corsOptions = {
-  origin: ['https://jazyell94.github.io'],
+  origin: ['*'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: false
 };
@@ -24,27 +24,6 @@ const wss = new WebSocket.Server({ server });
 // Middlewares
 app.use(express.json());
 app.use(bodyParser.json());
-
-// Middleware para servir arquivos estáticos
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Rotas diretas (opcional, mas útil se quiser acessar via /admin ou /cliente)
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin', 'login.html'));
-});
-
-app.get('/admin/painel', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin', 'admin.html'));
-});
-
-app.get('/cliente', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'cliente', 'index.html'));
-});
-
 
 // Conexão com o banco de dados
 const db = mysql.createConnection({
