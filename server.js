@@ -1,29 +1,25 @@
-const express = require('express');
 const cors = require('cors');
-const http = require('http');
-const path = require('path');
-
-require('dotenv').config();
-const mysql = require('mysql2');
-
-const WebSocket = require('ws');
-const bodyParser = require('body-parser');
-
-const app = express();
-
 const corsOptions = {
   origin: ['https://jazyell94.github.io'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: false
 };
 
-const port = process.env.PORT || 3000;
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
+const express = require('express');
+const http = require('http');
+const path = require('path');
+const mysql = require('mysql2');
+const WebSocket = require('ws');
+const bodyParser = require('body-parser');
+const app = express();
+const port = process.env.PORT || 3000;
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 // Middlewares
-app.use(cors(corsOptions));
 app.use(express.json());
 app.use(bodyParser.json());
 
