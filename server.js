@@ -6,8 +6,6 @@ const mysql = require('mysql2');
 const WebSocket = require('ws');
 const bodyParser = require('body-parser');
 
-require('dotenv').config();
-
 const app = express();
 
 const corsOptions = {
