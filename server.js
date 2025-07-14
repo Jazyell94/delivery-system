@@ -1,3 +1,13 @@
+const cors = require('cors');
+const express = require('express');
+const http = require('http');
+const path = require('path');
+const mysql = require('mysql2');
+const WebSocket = require('ws');
+const bodyParser = require('body-parser');
+
+require('dotenv').config();
+
 const app = express();
 
 const corsOptions = {
@@ -8,14 +18,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
-
-const cors = require('cors');
-const express = require('express');
-const http = require('http');
-const path = require('path');
-const mysql = require('mysql2');
-const WebSocket = require('ws');
-const bodyParser = require('body-parser');
 
 const port = process.env.PORT || 3000;
 const server = http.createServer(app);
