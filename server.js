@@ -54,6 +54,7 @@ wss.on('connection', (ws) => {
 // ==================== ROTAS DO ADMIN ====================
 
 app.get('/clientes', (req, res) => {
+  console.log('Rota /clientes foi chamada');
     const selectedDate = req.query.date || null;
 
     const query = `
