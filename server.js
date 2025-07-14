@@ -56,10 +56,53 @@ wss.on('connection', (ws) => {
 });
 
 
-// ==================== ROTAS DO CLIENTE ====================
+// ... (código anterior igual)
+
+// ==================== ROTAS DO ADMIN ====================
+
+app.get('/clientes', (req, res) => {
+    const selectedDate = req.query.date || null;
+
+    const query = `
+        SELECT c.id AS client_id, c.nome, c.endereco, 
+               GROUP_CONCAT(CONCAT(p.produto_id, ' ', p.quantidade, 'x') SEPARATOR ', ') AS produtos,
+               SUM(p.quantidade) AS total_quantidade,
+               SUM(p.preco * p.quantidade) AS total_preco,
+               c.forma_pagamento,
+               COALESCE(c.troco, 0) AS troco,
+               MAX(c.data_pedido) AS data_pedido,
+               COALESCE(c.status, 'pendente') AS status 
+        FROM clientes c
+        LEFT JOIN produtos_comprados p ON c.id = p.cliente_id
+        WHERE (? IS NULL OR DATE(c.data_pedido) = ?)
+        GROUP BY c.id
+        ORDER BY data_pedido DESC;
+    `;
+
+    db.query(query, [selectedDate, selectedDate], (error, results) => {
+        if (error) {
+            console.error('Erro SQL:', error);
+            return res.status(500).json({ error: error.message });
+        }
+
+        const formattedResults = results.map(client => {
+            try {
+                const date = new Date(client.data_pedido);
+                client.data_pedido = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')} ${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+                return client;
+            } catch (e) {
+                return { ...client, data_pedido: "Data inválida" };
+            }
+        });
+
+        res.json(formattedResults);
+    });
+});
+
+// ==================== Ajuste importante na finalização de compra ====================
 
 app.post("/finalizar-compra", (req, res) => {
-    const { nome, endereco, forma_pagamento, troco, produtos, total } = req.body;
+    const { nome, endereco, forma_pagamento, troco, produtos } = req.body;
 
     db.beginTransaction((err) => {
         if (err) return res.status(500).json({ message: "Erro ao iniciar transação" });
@@ -83,76 +126,42 @@ app.post("/finalizar-compra", (req, res) => {
                 VALUES (?, ?, ?, ?)
             `;
 
-            produtos.forEach((produto, index) => {
-                db.query(insertProduct, [produto.id, clienteId, produto.quantidade, produto.preco], (err) => {
-                    if (err) {
-                        return db.rollback(() => {
-                            console.error("Erro ao inserir produto:", err);
-                            res.status(500).json({ message: "Erro ao inserir produto" });
-                        });
-                    }
-
-                    if (index === produtos.length - 1) {
-                        db.commit((err) => {
-                            if (err) {
-                                return db.rollback(() => {
-                                    console.error("Erro ao finalizar transação:", err);
-                                    res.status(500).json({ message: "Erro ao finalizar transação" });
-                                });
-                            }
-
-                            // Notifica o admin via WebSocket
-                            wss.clients.forEach(client => {
-                                if (client.readyState === WebSocket.OPEN) {
-                                    client.send(JSON.stringify({ action: 'newOrder', data: req.body }));
-                                }
-                            });
-
-                            res.status(200).json({ message: "Compra finalizada com sucesso!" });
-                        });
-                    }
+            const queries = produtos.map(produto => {
+                return new Promise((resolve, reject) => {
+                    db.query(insertProduct, [produto.id, clienteId, produto.quantidade, produto.preco], (err) => {
+                        if (err) reject(err);
+                        else resolve();
+                    });
                 });
             });
+
+            Promise.all(queries)
+                .then(() => {
+                    db.commit((err) => {
+                        if (err) {
+                            return db.rollback(() => {
+                                console.error("Erro ao finalizar transação:", err);
+                                res.status(500).json({ message: "Erro ao finalizar transação" });
+                            });
+                        }
+
+                        wss.clients.forEach(client => {
+                            if (client.readyState === WebSocket.OPEN) {
+                                client.send(JSON.stringify({ action: 'newOrder', data: req.body }));
+                            }
+                        });
+
+                        res.status(200).json({ message: "Compra finalizada com sucesso!" });
+                    });
+                })
+                .catch(err => {
+                    db.rollback(() => {
+                        console.error("Erro ao inserir produtos:", err);
+                        res.status(500).json({ message: "Erro ao inserir produtos" });
+                    });
+                });
         });
     });
-});
-
-
-// ==================== ROTAS DO ADMIN ====================
-
-app.get('/clientes', (req, res) => {
-    const selectedDate = req.query.date;
-    const query = `
-        SELECT c.id AS client_id, c.nome, c.endereco, 
-                GROUP_CONCAT(CONCAT(p.produto_id, ' ', p.quantidade, 'x') SEPARATOR ', ') AS produtos,
-                SUM(p.quantidade) AS total_quantidade,
-                SUM(p.preco * p.quantidade) AS total_preco,
-                c.forma_pagamento,
-                COALESCE(c.troco, 0) AS troco,
-                MAX(c.data_pedido) AS data_pedido,
-                COALESCE(c.status, 'pendente') AS status 
-        FROM clientes c
-        LEFT JOIN produtos_comprados p ON c.id = p.cliente_id
-        WHERE DATE(c.data_pedido) = ? OR ? IS NULL
-        GROUP BY c.id
-        ORDER BY data_pedido DESC;
-    `;
-
-    db.query(query, [selectedDate, selectedDate], (error, results) => {
-        if (error) {
-            console.error('Erro SQL:', error); // Mostra no terminal do Railway
-            return res.status(500).json({ error: error.message }); // Mostra na API o erro real
-        }
-
-        const formattedResults = results.map(client => {
-            const date = new Date(client.data_pedido);
-            client.data_pedido = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')} ${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
-            return client;
-        });
-
-        res.json(formattedResults);
-    });
-
 });
 
 
