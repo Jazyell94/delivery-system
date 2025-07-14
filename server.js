@@ -9,7 +9,7 @@ const bodyParser = require('body-parser');
 const app = express();
 
 const corsOptions = {
-  origin: ['*'],
+  origin: 'https://jazyell94.github.io',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: false
 };
