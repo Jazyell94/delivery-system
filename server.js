@@ -11,7 +11,7 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 // ✅ CORS com suporte a múltiplas origens
-const allowedOrigins = ['https://jazyell94.github.io/delivery-front/', 'http://localhost:5173'];
+const allowedOrigins = ['https://jazyell94.github.io/delivery-front/public/', 'http://localhost:5173'];
 
 const corsOptions = {
   origin: (origin, callback) => {
