@@ -1,3 +1,4 @@
+
 const cors = require('cors');
 const express = require('express');
 const http = require('http');
@@ -9,17 +10,14 @@ const config = require('./config');
 
 const app = express();
 
-app.use(cors());
+// ✅ CORS CORRIGIDO
+const corsOptions = {
+  origin: 'https://jazyell94.github.io',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
 
-// Configurar CORS manualmente
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*'); // ou substitua '*' por seu domínio específico
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  next();
-});
-
-const port = process.env.PORT || 3000;
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
@@ -27,25 +25,16 @@ const wss = new WebSocket.Server({ server });
 app.use(express.json());
 app.use(bodyParser.json());
 
-
-// Conexão com banco
+// ✅ CONEXÃO COM O BANCO (apenas uma vez)
 const db = mysql.createConnection(config.db);
 db.connect(err => {
   if (err) {
     console.error('❌ Erro ao conectar no banco:', err);
     return;
   }
-  console.log('✅ Conectado ao banco!');
+  console.log('✅ Conectado ao banco de dados MySQL!');
 });
 
-
-db.connect((err) => {
-    if (err) {
-        console.error('Erro ao conectar ao banco de dados:', err);
-        return;
-    }
-    console.log('Conectado ao banco de dados MySQL!');
-});
 
 // WebSocket
 wss.on('connection', (ws) => {
@@ -273,8 +262,7 @@ app.delete('/clear-database', (req, res) => {
 
 
 // ==================== INICIALIZAÇÃO ====================
-
-server.listen(port, () => {
-    console.log(`Servidor unificado rodando em http://localhost:${port}`);
-    console.log(`WebSocket disponível em ws://localhost:${port}`);
+const port = process.env.PORT || 3306;
+server.listen(port, '0.0.0.0', () => {
+  console.log(`Servidor rodando na porta ${port}`);
 });
